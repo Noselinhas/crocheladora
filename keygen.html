@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔑 Gerador de Chaves — Crochêladora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #FBF5EE;
+      color: #2C1007;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 700px; margin: 0 auto; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg,#6B3F28 0%,#9B6445 55%,#C17B50 100%);
+      border-radius: 20px;
+      padding: 28px 24px;
+      color: #fff;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      content: '🔑';
+      position: absolute; right: -10px; top: -10px;
+      font-size: 110px; opacity: .10; transform: rotate(20deg);
+    }
+    .header h1 { font-size: 1.8rem; font-weight: 900; margin-bottom: 4px; }
+    .header p  { font-size: .9rem; color: rgba(255,255,255,.82); line-height: 1.5; }
+    .private-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.2);
+      border: 1.5px solid rgba(255,255,255,.4);
+      color: #fff; font-size: .72rem; font-weight: 800;
+      padding: 3px 12px; border-radius: 20px; margin-top: 10px;
+      letter-spacing: .5px; text-transform: uppercase;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 4px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 6px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 10px rgba(107,63,40,.12);
+    }
+    .tab-btn {
+      flex: 1; padding: 10px; border: none;
+      border-radius: 10px; background: transparent;
+      font-family: 'Nunito', sans-serif;
+      font-size: .88rem; font-weight: 800; color: #A07060;
+      cursor: pointer; transition: all .2s;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg,#6B3F28,#C17B50);
+      color: #fff;
+      box-shadow: 0 3px 12px rgba(107,63,40,.3);
+    }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Gerar tab ── */
+    .warning {
+      background: #FFF8E6; border: 2px solid #F0C060;
+      border-radius: 14px; padding: 14px 16px;
+      margin-bottom: 18px; font-size: .84rem; color: #7A5800; line-height: 1.5;
+    }
+    .warning strong { color: #5A3A00; }
+
+    .controls {
+      background: #fff; border-radius: 16px;
+      padding: 20px; box-shadow: 0 4px 20px rgba(107,63,40,.12);
+      margin-bottom: 16px; display: flex; gap: 12px;
+      align-items: flex-end; flex-wrap: wrap;
+    }
+    .ctrl-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+    .ctrl-group label { font-size: .72rem; font-weight: 800; color: #6B4030; text-transform: uppercase; letter-spacing: .5px; }
+    .ctrl-group select, .ctrl-group input[type="text"] {
+      padding: 12px 14px; border: 2px solid #E8D0BB; border-radius: 10px;
+      font-size: .95rem; color: #2C1007; background: #FBF5EE;
+      font-family: 'Nunito', sans-serif; font-weight: 700;
+      outline: none; transition: border-color .2s;
+    }
+    .ctrl-group select:focus,
+    .ctrl-group input[type="text"]:focus { border-color: #6B3F28; }
+    .ctrl-group input[type="text"]::placeholder { color: #C49A7A; font-weight: 600; }
+
+    .btn-generate {
+      flex: 1; min-width: 160px; padding: 13px 20px;
+      background: linear-gradient(135deg,#6B3F28,#C17B50);
+      color: #fff; border: none; border-radius: 12px;
+      font-size: .95rem; font-weight: 900; cursor: pointer;
+      transition: all .2s; box-shadow: 0 4px 14px rgba(107,63,40,.35);
+      font-family: 'Nunito', sans-serif;
+    }
+    .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(107,63,40,.45); }
+
+    /* Stats */
+    .stats { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .stat {
+      background: #fff; border-radius: 12px; padding: 12px 16px;
+      box-shadow: 0 2px 10px rgba(107,63,40,.10);
+      flex: 1; text-align: center; min-width: 100px;
+    }
+    .stat-val { display: block; font-size: 1.4rem; font-weight: 900; color: #6B3F28; }
+    .stat-lbl { font-size: .72rem; font-weight: 700; color: #A07060; }
+
+    /* ── Keys table ── */
+    .keys-container {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(107,63,40,.12); overflow: hidden;
+    }
+    .keys-header {
+      padding: 14px 20px; background: #F5E4D7;
+      border-bottom: 1.5px solid #E8D0BB;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      flex-wrap: wrap;
+    }
+    .keys-header-left { font-size: .8rem; font-weight: 800; color: #6B4030; text-transform: uppercase; letter-spacing: .5px; }
+    .btn-clear-session {
+      padding: 6px 14px; border: 1.5px solid #E8D0BB; background: transparent;
+      color: #A07060; border-radius: 8px; font-size: .75rem; font-weight: 800;
+      cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .15s;
+    }
+    .btn-clear-session:hover { background: #fee; border-color: #c00; color: #c00; }
+
+    .key-row {
+      display: flex; align-items: center;
+      padding: 12px 20px; border-bottom: 1px solid #F0E4D8; gap: 10px;
+      transition: background .15s; flex-wrap: wrap;
+    }
+    .key-row:hover { background: #FBF5EE; }
+    .key-row:last-child { border-bottom: none; }
+    .key-num { font-size: .75rem; font-weight: 700; color: #C49A7A; min-width: 22px; text-align: right; flex-shrink: 0; }
+    .key-text { flex: 1; font-family: 'Courier New', monospace; font-size: .97rem; font-weight: 700; color: #2C1007; letter-spacing: 1.5px; min-width: 160px; }
+    .key-note-inline { font-size: .75rem; color: #A07060; font-style: italic; margin-top: 2px; }
+    .key-date { font-size: .72rem; color: #C49A7A; white-space: nowrap; }
+
+    .key-status {
+      font-size: .72rem; font-weight: 800; padding: 4px 10px;
+      border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+    }
+    .key-status.pending   { background: #F0EAD6; color: #8A6020; }
+    .key-status.activated { background: #EAF5EC; color: #2E7D3A; }
+    .key-status.sent      { background: #E8EFF8; color: #2055A0; }
+    .key-status.revoked   { background: #FDE8E8; color: #B00020; }
+    .key-status.checking  { background: #F0EAD6; color: #8A6020; opacity: .7; }
+
+    .key-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .btn-action {
+      padding: 5px 11px; border-radius: 8px; font-size: .73rem; font-weight: 800;
+      cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .15s;
+      white-space: nowrap;
+    }
+    .btn-copy  { border: 1.5px solid #E8D0BB; background: transparent; color: #6B4030; }
+    .btn-copy:hover, .btn-copy.copied { background: #4E8A5A; color: #fff; border-color: #4E8A5A; }
+    .btn-note  { border: 1.5px solid #D0C0E0; background: transparent; color: #604880; }
+    .btn-note:hover { background: #604880; color: #fff; border-color: #604880; }
+    .btn-revoke { border: 1.5px solid #E8D0BB; background: transparent; color: #C06060; }
+    .btn-revoke:hover { background: #C06060; color: #fff; border-color: #C06060; }
+
+    .empty-state  { padding: 40px 20px; text-align: center; color: #A07060; }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-state p { font-size: .9rem; }
+
+    /* ── Firebase config tab ── */
+    .fb-card {
+      background: #fff; border-radius: 16px;
+      padding: 24px; box-shadow: 0 4px 20px rgba(107,63,40,.12);
+      margin-bottom: 18px;
+    }
+    .fb-card h2 { font-size: 1.1rem; font-weight: 900; color: #2C1007; margin-bottom: 6px; }
+    .fb-card p  { font-size: .85rem; color: #6B4030; line-height: 1.5; margin-bottom: 14px; }
+    .fb-status  { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px 16px; border-radius: 10px; font-size: .84rem; font-weight: 700; }
+    .fb-status.ok   { background: #EAF5EC; color: #2E7D3A; }
+    .fb-status.warn { background: #FFF8E6; color: #7A5800; }
+    .fb-url-row { display: flex; gap: 10px; margin-bottom: 14px; }
+    .fb-url-inp {
+      flex: 1; padding: 12px 14px; border: 2px solid #E8D0BB; border-radius: 10px;
+      font-size: .88rem; color: #2C1007; background: #FBF5EE;
+      font-family: 'Nunito', sans-serif; font-weight: 700; outline: none;
+    }
+    .fb-url-inp:focus { border-color: #6B3F28; }
+    .btn-fb-save {
+      padding: 12px 20px; background: linear-gradient(135deg,#6B3F28,#C17B50);
+      color: #fff; border: none; border-radius: 10px; font-size: .88rem;
+      font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif;
+      white-space: nowrap; transition: all .2s;
+    }
+    .btn-fb-save:hover { opacity: .9; }
+    .btn-fb-clear { padding: 12px 16px; background: transparent; border: 2px solid #E8D0BB; color: #A07060; border-radius: 10px; font-size: .88rem; font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .15s; }
+    .btn-fb-clear:hover { border-color: #c00; color: #c00; }
+
+    .step-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .step-item { display: flex; gap: 12px; align-items: flex-start; }
+    .step-num-badge { min-width: 26px; height: 26px; background: #6B3F28; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 900; flex-shrink: 0; margin-top: 1px; }
+    .step-text { font-size: .84rem; color: #6B4030; line-height: 1.55; }
+    .step-text strong { color: #2C1007; }
+    .code-pill { background: #F0E0D0; border-radius: 6px; padding: 1px 8px; font-family: 'Courier New', monospace; font-size: .82rem; }
+    .rules-block {
+      background: #2C1007; color: #A8D8B0; border-radius: 10px;
+      padding: 14px 16px; font-family: 'Courier New', monospace;
+      font-size: .78rem; line-height: 1.7; margin-top: 10px; overflow-x: auto;
+    }
+    .copy-rules-btn {
+      margin-top: 8px; padding: 7px 16px; background: transparent; border: 1.5px solid #E8D0BB;
+      color: #6B4030; border-radius: 8px; font-size: .78rem; font-weight: 800;
+      cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .15s;
+    }
+    .copy-rules-btn:hover { background: #6B3F28; color: #fff; border-color: #6B3F28; }
+
+    /* Note modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.5);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; padding: 20px; opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: #fff; border-radius: 18px; padding: 24px;
+      width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      transform: scale(.95); transition: transform .2s;
+    }
+    .modal-overlay.show .modal-box { transform: scale(1); }
+    .modal-box h3 { font-size: 1rem; font-weight: 900; margin-bottom: 14px; color: #2C1007; }
+    .modal-box input {
+      width: 100%; padding: 12px 14px; border: 2px solid #E8D0BB; border-radius: 10px;
+      font-size: .95rem; font-family: 'Nunito', sans-serif; font-weight: 700;
+      color: #2C1007; background: #FBF5EE; outline: none; margin-bottom: 14px;
+    }
+    .modal-box input:focus { border-color: #6B3F28; }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-btn { flex: 1; padding: 11px; border-radius: 10px; font-size: .88rem; font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif; border: none; transition: all .15s; }
+    .modal-btn.primary { background: linear-gradient(135deg,#6B3F28,#C17B50); color: #fff; }
+    .modal-btn.secondary { background: #F0E0D0; color: #6B4030; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #2C1007; color: #fff; padding: 12px 24px;
+      border-radius: 12px; font-size: .88rem; font-weight: 700;
+      box-shadow: 0 8px 32px rgba(0,0,0,.3); opacity: 0;
+      transition: all .3s ease; white-space: nowrap; z-index: 999;
+    }
+    .toast.show   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: #4E8A5A; }
+
+    @media(max-width:500px) {
+      .controls { flex-direction: column; }
+      .btn-generate { width: 100%; }
+      .key-text { font-size: .82rem; }
+      .fb-url-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <h1>🧶 Crochêladora</h1>
+      <p>Gerador de Chaves de Ativação</p>
+      <div class="private-badge">🔒 Ferramenta Privada — Não Compartilhar</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('gerar')">🎲 Gerar Chaves</button>
+      <button class="tab-btn" onclick="switchTab('historico')" id="tab-hist-btn">📋 Chaves Geradas</button>
+      <button class="tab-btn" onclick="switchTab('firebase')">⚙️ Firebase</button>
+    </div>
+
+    <!-- ═══════════════ TAB: GERAR ═══════════════ -->
+    <div class="tab-panel active" id="panel-gerar">
+      <div class="warning">
+        ⚠️ <strong>Atenção:</strong> Mantenha este arquivo privado. Cada chave gerada aqui ativa o app em um celular. As chaves ficam salvas nesta página — você pode consultá-las na aba "Chaves Geradas".
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-group">
+          <label>Quantidade</label>
+          <select id="batch-size">
+            <option value="1">1 chave</option>
+            <option value="5">5 chaves</option>
+            <option value="10" selected>10 chaves</option>
+            <option value="20">20 chaves</option>
+            <option value="50">50 chaves</option>
+          </select>
+        </div>
+        <div class="ctrl-group">
+          <label>Nome / Observação (opcional)</label>
+          <input type="text" id="gen-note" placeholder="Ex: Maria Silva, Lote Jan/25…">
+        </div>
+        <button class="btn-generate" id="btn-generate">🎲 Gerar Chaves</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-val" id="stat-total">0</span>
+          <span class="stat-lbl">Total Geradas</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val" id="stat-pending">0</span>
+          <span class="stat-lbl">Pendentes</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val" id="stat-activated">0</span>
+          <span class="stat-lbl">Ativadas</span>
+        </div>
+      </div>
+
+      <!-- Preview das chaves recém-geradas -->
+      <div class="keys-container" id="session-container" style="display:none">
+        <div class="keys-header">
+          <span class="keys-header-left">✨ Chaves desta geração</span>
+          <button class="btn-clear-session" onclick="clearSession()">Limpar prévia</button>
+        </div>
+        <div id="session-list"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ TAB: HISTÓRICO ═══════════════ -->
+    <div class="tab-panel" id="panel-historico">
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-val" id="h-stat-total">0</span>
+          <span class="stat-lbl">Total Geradas</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val" id="h-stat-pending">0</span>
+          <span class="stat-lbl">Pendentes</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val" id="h-stat-activated">0</span>
+          <span class="stat-lbl">Ativadas</span>
+        </div>
+      </div>
+
+      <div class="keys-container">
+        <div class="keys-header">
+          <span class="keys-header-left">📋 Histórico Completo</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="hist-firebase-badge" style="font-size:.72rem;font-weight:700;color:#8A6020;"></span>
+            <button class="btn-clear-session" onclick="refreshStatus()" id="btn-refresh" style="color:#2055A0;border-color:#B0C8E0">🔄 Atualizar status</button>
+          </div>
+        </div>
+        <div id="history-list">
+          <div class="empty-state">
+            <div class="icon">🔑</div>
+            <p>Nenhuma chave gerada ainda.<br>Vá para "Gerar Chaves" para começar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ TAB: FIREBASE ═══════════════ -->
+    <div class="tab-panel" id="panel-firebase">
+
+      <div class="fb-card">
+        <h2>🔥 Verificação Online (Firebase)</h2>
+        <p>Com o Firebase configurado, uma mesma chave <strong>não poderá ser ativada em dois celulares diferentes</strong>. A configuração é feita uma única vez e é gratuita.</p>
+
+        <div class="fb-status" id="fb-status-bar">
+          ⏳ Verificando configuração…
+        </div>
+
+        <div class="fb-url-row">
+          <input type="text" class="fb-url-inp" id="fb-url-inp"
+            placeholder="https://seu-projeto-default-rtdb.firebaseio.com">
+          <button class="btn-fb-save" onclick="saveFirebaseUrl()">💾 Salvar</button>
+          <button class="btn-fb-clear" onclick="clearFirebaseUrl()">✕</button>
+        </div>
+        <p style="font-size:.78rem;color:#A07060;margin-top:-8px;margin-bottom:0">Cole aqui a URL do Firebase Realtime Database (sem barra no final).</p>
+      </div>
+
+      <div class="fb-card">
+        <h2>📋 Como configurar o Firebase (5 min)</h2>
+        <p>Siga os passos abaixo. Só precisa fazer uma vez:</p>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-num-badge">1</div>
+            <div class="step-text">
+              Abra <strong>console.firebase.google.com</strong> e faça login com sua conta Google. Clique em <strong>"Criar projeto"</strong> → dê o nome <span class="code-pill">crocheladora</span> → clique em Continuar até criar.
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num-badge">2</div>
+            <div class="step-text">
+              No menu lateral esquerdo clique em <strong>"Compilar" → "Realtime Database"</strong>. Em seguida, clique em <strong>"Criar banco de dados"</strong>. Escolha a localização <strong>Estados Unidos</strong> e inicie em <strong>modo de teste</strong>.
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num-badge">3</div>
+            <div class="step-text">
+              Após criado, você verá uma URL como <span class="code-pill">https://crocheladora-abc12-default-rtdb.firebaseio.com</span>. Copie essa URL e cole no campo acima.
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num-badge">4</div>
+            <div class="step-text">
+              Ainda no Firebase, clique na aba <strong>"Regras"</strong> e substitua todo o conteúdo pelas regras abaixo. Isso impede que uma chave seja ativada duas vezes:
+              <div class="rules-block">{
+  "rules": {
+    "activations": {
+      "$key": {
+        ".read": true,
+        ".write": "!data.exists()"
+      }
+    }
+  }
+}</div>
+              <button class="copy-rules-btn" onclick="copyRules()">📋 Copiar regras</button>
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num-badge">5</div>
+            <div class="step-text">
+              Clique em <strong>"Publicar"</strong> para salvar as regras. Pronto! Agora cole a URL no campo acima e clique em <strong>Salvar</strong>.
+            </div>
+          </li>
+          <li class="step-item">
+            <div class="step-num-badge">6</div>
+            <div class="step-text">
+              <strong>Último passo:</strong> Ainda precisa informar a URL para o app. Abra no GitHub o arquivo <span class="code-pill">js/license.js</span>, clique no lápis (editar) e encontre a linha com <span class="code-pill">localStorage.getItem('croc_firebase_url')</span>. O app já lê a URL que você salvou aqui — ela fica compartilhada automaticamente!
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <!-- Note Modal -->
+  <div class="modal-overlay" id="note-modal">
+    <div class="modal-box">
+      <h3>✏️ Editar observação da chave</h3>
+      <input type="text" id="note-input" placeholder="Ex: Maria Silva — WhatsApp" maxlength="60">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeNoteModal()">Cancelar</button>
+        <button class="modal-btn primary" onclick="saveNote()">💾 Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* ── License algorithm (same as license.js) ──────────── */
+    const _p = ['Croch3','L4dora','_N0s&','L1nhas','#2025'];
+    const SECRET = _p.join('');
+    const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+    function _djb2(str) {
+      let h = 5381;
+      for (let i = 0; i < str.length; i++) h = Math.imul(h, 33) ^ str.charCodeAt(i);
+      return h >>> 0;
+    }
+    function _toSeg(n) {
+      let s = '';
+      for (let i = 0; i < 4; i++) { s = CHARS[n % 32] + s; n = Math.floor(n / 32); }
+      return s;
+    }
+    function generateKey() {
+      let a = '', b = '';
+      for (let i = 0; i < 4; i++) a += CHARS[Math.floor(Math.random() * 32)];
+      for (let i = 0; i < 4; i++) b += CHARS[Math.floor(Math.random() * 32)];
+      return `CROC-${a}-${b}-${_toSeg(_djb2(SECRET + a + b))}`;
+    }
+    function normalise(key) { return key.toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+
+    /* ── Storage ─────────────────────────────────────────── */
+    const KEYS_STORAGE = 'kg_keys_v2';
+
+    function loadKeys() {
+      try { return JSON.parse(localStorage.getItem(KEYS_STORAGE)) || []; }
+      catch { return []; }
+    }
+    function saveKeys(arr) {
+      localStorage.setItem(KEYS_STORAGE, JSON.stringify(arr));
+    }
+
+    let allKeys = loadKeys();       // Array of { key, generated, note, manualStatus, firebaseStatus }
+    let sessionKeys = [];           // Keys from the latest generate batch
+    let editingKeyIndex = null;
+
+    /* ── Firebase ────────────────────────────────────────── */
+    function getFirebaseUrl() {
+      return localStorage.getItem('croc_firebase_url') || '';
+    }
+
+    async function fetchFirebaseStatus(cleanKey) {
+      const url = getFirebaseUrl();
+      if (!url) return null; // no firebase = unknown
+      try {
+        const res = await fetch(`${url}/activations/${normalise(cleanKey)}.json`,
+          { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data ? data : null; // null = not activated, object = activated
+      } catch { return null; }
+    }
+
+    /* ── Stats helpers ──────────────────────────────────── */
+    function computeStats() {
+      const total     = allKeys.length;
+      const activated = allKeys.filter(k => k.firebaseStatus === 'activated' || k.manualStatus === 'activated').length;
+      const pending   = total - activated;
+      return { total, activated, pending };
+    }
+
+    function updateGenStats() {
+      const s = computeStats();
+      document.getElementById('stat-total').textContent     = s.total;
+      document.getElementById('stat-pending').textContent   = s.pending;
+      document.getElementById('stat-activated').textContent = s.activated;
+    }
+
+    function updateHistStats() {
+      const s = computeStats();
+      document.getElementById('h-stat-total').textContent     = s.total;
+      document.getElementById('h-stat-pending').textContent   = s.pending;
+      document.getElementById('h-stat-activated').textContent = s.activated;
+    }
+
+    /* ── Status badge HTML ────────────────────────────────── */
+    function statusBadge(key) {
+      if (key.manualStatus === 'revoked')
+        return `<span class="key-status revoked">🚫 Revogada</span>`;
+      if (key.firebaseStatus === 'activated')
+        return `<span class="key-status activated">✅ Ativada</span>`;
+      if (key.manualStatus === 'sent')
+        return `<span class="key-status sent">📤 Enviada</span>`;
+      if (key.firebaseStatus === 'checking')
+        return `<span class="key-status checking">⏳ Verificando…</span>`;
+      return `<span class="key-status pending">⏳ Pendente</span>`;
+    }
+
+    /* ── Render — session preview ─────────────────────────── */
+    function renderSession() {
+      const container = document.getElementById('session-container');
+      const list      = document.getElementById('session-list');
+      if (!sessionKeys.length) { container.style.display = 'none'; return; }
+      container.style.display = 'block';
+      list.innerHTML = sessionKeys.map((k, i) => {
+        const idx = allKeys.findIndex(x => x.key === k.key);
+        return `<div class="key-row" id="srow-${i}">
+          <span class="key-num">${i + 1}</span>
+          <div style="flex:1;min-width:0">
+            <div class="key-text">${k.key}</div>
+            ${k.note ? `<div class="key-note-inline">📝 ${esc(k.note)}</div>` : ''}
+          </div>
+          <div class="key-actions">
+            <button class="btn-action btn-copy" onclick="copyKey('${k.key}', 'srow-${i}')">Copiar</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    /* ── Render — full history ────────────────────────────── */
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      if (!allKeys.length) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">🔑</div><p>Nenhuma chave gerada ainda.</p></div>`;
+        updateHistStats();
+        return;
+      }
+      list.innerHTML = allKeys.map((k, i) => {
+        const date = new Date(k.generated).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'});
+        const time = new Date(k.generated).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        return `<div class="key-row" id="hrow-${i}">
+          <span class="key-num">${allKeys.length - i}</span>
+          <div style="flex:1;min-width:0">
+            <div class="key-text">${k.key}</div>
+            ${k.note ? `<div class="key-note-inline">📝 ${esc(k.note)}</div>` : ''}
+            <div class="key-date">${date} às ${time}</div>
+          </div>
+          ${statusBadge(k)}
+          <div class="key-actions">
+            <button class="btn-action btn-copy" onclick="copyKey('${k.key}', 'hrow-${i}')">Copiar</button>
+            <button class="btn-action btn-note" onclick="openNoteModal(${i})">✏️</button>
+            ${k.manualStatus !== 'revoked' ? `<button class="btn-action btn-revoke" onclick="revokeKey(${i})" title="Marcar como revogada">🚫</button>` : `<button class="btn-action btn-revoke" onclick="unRevokeKey(${i})" title="Desmarcar">↩</button>`}
+          </div>
+        </div>`;
+      }).join('');
+      updateHistStats();
+    }
+
+    function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    /* ── Generate batch ──────────────────────────────────── */
+    function generateBatch() {
+      const count = parseInt(document.getElementById('batch-size').value);
+      const note  = document.getElementById('gen-note').value.trim();
+      const newKeys = Array.from({ length: count }, () => ({
+        key:           generateKey(),
+        generated:     new Date().toISOString(),
+        note:          note,
+        manualStatus:  null,
+        firebaseStatus: null
+      }));
+      allKeys = [...newKeys, ...allKeys];
+      sessionKeys = newKeys;
+      saveKeys(allKeys);
+      renderSession();
+      updateGenStats();
+      showToast(`✅ ${count} chave${count > 1 ? 's' : ''} gerada${count > 1 ? 's' : ''}!`, 'success');
+    }
+
+    function clearSession() {
+      sessionKeys = [];
+      document.getElementById('session-container').style.display = 'none';
+    }
+
+    /* ── Copy key ───────────────────────────────────────── */
+    function copyKey(key, rowId) {
+      navigator.clipboard.writeText(key).then(() => {
+        const btn = document.querySelector(`#${rowId} .btn-copy`);
+        if (btn) {
+          btn.textContent = '✔ Copiado!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+        }
+        showToast('🔑 Chave copiada!', 'success');
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = key; ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+        showToast('🔑 Chave copiada!', 'success');
+      });
+    }
+
+    /* ── Note modal ─────────────────────────────────────── */
+    function openNoteModal(idx) {
+      editingKeyIndex = idx;
+      document.getElementById('note-input').value = allKeys[idx].note || '';
+      document.getElementById('note-modal').classList.add('show');
+      setTimeout(() => document.getElementById('note-input').focus(), 100);
+    }
+    function closeNoteModal() {
+      document.getElementById('note-modal').classList.remove('show');
+      editingKeyIndex = null;
+    }
+    function saveNote() {
+      if (editingKeyIndex === null) return;
+      allKeys[editingKeyIndex].note = document.getElementById('note-input').value.trim();
+      saveKeys(allKeys);
+      renderHistory();
+      closeNoteModal();
+      showToast('✅ Observação salva!', 'success');
+    }
+    document.getElementById('note-input').addEventListener('keydown', e => { if (e.key === 'Enter') saveNote(); });
+    document.getElementById('note-modal').addEventListener('click', e => { if (e.target.id === 'note-modal') closeNoteModal(); });
+
+    /* ── Revoke ─────────────────────────────────────────── */
+    function revokeKey(idx) {
+      if (!confirm('Marcar esta chave como revogada? Ela ainda poderá ser usada tecnicamente, mas você saberá que é inválida.')) return;
+      allKeys[idx].manualStatus = 'revoked';
+      saveKeys(allKeys);
+      renderHistory();
+      showToast('🚫 Chave marcada como revogada.', '');
+    }
+    function unRevokeKey(idx) {
+      allKeys[idx].manualStatus = null;
+      saveKeys(allKeys);
+      renderHistory();
+    }
+
+    /* ── Firebase status refresh ────────────────────────── */
+    async function refreshStatus() {
+      const fbUrl = getFirebaseUrl();
+      if (!fbUrl) {
+        showToast('⚠️ Configure o Firebase primeiro.', '');
+        switchTab('firebase');
+        return;
+      }
+      const btn = document.getElementById('btn-refresh');
+      btn.disabled = true; btn.textContent = '⏳ Verificando…';
+
+      // Mark all as checking
+      allKeys.forEach(k => { if (k.firebaseStatus !== 'activated') k.firebaseStatus = 'checking'; });
+      renderHistory();
+
+      // Fetch status for each key (batch with small delay)
+      for (let i = 0; i < allKeys.length; i++) {
+        const k = allKeys[i];
+        const clean = normalise(k.key);
+        const data = await fetchFirebaseStatus(clean);
+        allKeys[i].firebaseStatus = data ? 'activated' : null;
+        if (data && data.activatedAt) allKeys[i].activatedAt = data.activatedAt;
+      }
+
+      saveKeys(allKeys);
+      renderHistory();
+      btn.disabled = false; btn.textContent = '🔄 Atualizar status';
+      showToast('✅ Status atualizado!', 'success');
+    }
+
+    /* ── Tab switching ──────────────────────────────────── */
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        const tabs = ['gerar','historico','firebase'];
+        b.classList.toggle('active', tabs[i] === tab);
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`panel-${tab}`).classList.add('active');
+
+      if (tab === 'historico') renderHistory();
+      if (tab === 'firebase')  checkFirebaseStatus();
+    }
+
+    /* ── Firebase config ────────────────────────────────── */
+    function checkFirebaseStatus() {
+      const url = getFirebaseUrl();
+      const bar = document.getElementById('fb-status-bar');
+      const inp = document.getElementById('fb-url-inp');
+      if (url) {
+        inp.value = url;
+        bar.className = 'fb-status ok';
+        bar.textContent = `✅ Firebase configurado: ${url}`;
+        document.getElementById('hist-firebase-badge').textContent = '🔥 Firebase ativo';
+      } else {
+        bar.className = 'fb-status warn';
+        bar.textContent = '⚠️ Firebase não configurado — verificação por dispositivo desativada.';
+        document.getElementById('hist-firebase-badge').textContent = '';
+      }
+    }
+    function saveFirebaseUrl() {
+      const url = document.getElementById('fb-url-inp').value.trim().replace(/\/$/, '');
+      if (!url) { showToast('⚠️ Cole a URL do Firebase.', ''); return; }
+      if (!url.includes('firebaseio.com')) { showToast('❌ URL inválida. Deve conter firebaseio.com', ''); return; }
+      localStorage.setItem('croc_firebase_url', url);
+      checkFirebaseStatus();
+      showToast('✅ Firebase salvo! O app vai usar esta URL.', 'success');
+    }
+    function clearFirebaseUrl() {
+      localStorage.removeItem('croc_firebase_url');
+      document.getElementById('fb-url-inp').value = '';
+      checkFirebaseStatus();
+      showToast('Firebase removido.', '');
+    }
+
+    function copyRules() {
+      const rules = `{
+  "rules": {
+    "activations": {
+      "$key": {
+        ".read": true,
+        ".write": "!data.exists()"
+      }
+    }
+  }
+}`;
+      navigator.clipboard.writeText(rules).then(() => showToast('📋 Regras copiadas!', 'success'));
+    }
+
+    /* ── Toast ──────────────────────────────────────────── */
+    let _tt;
+    function showToast(msg, type = '') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      clearTimeout(_tt);
+      _tt = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    /* ── Init ───────────────────────────────────────────── */
+    document.getElementById('btn-generate').addEventListener('click', generateBatch);
+    updateGenStats();
+    checkFirebaseStatus();
+  </script>
+</body>
+</html>

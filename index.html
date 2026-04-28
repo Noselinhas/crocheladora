@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#6B3F28">
+  <meta name="description" content="Calculadora de precificação para artesãos. Calcule o preço justo das suas peças.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Artesaladora">
+  <title>Crochêladora | Nós&amp;Linhas</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ====== ACTIVATION SCREEN ====== -->
+<div id="activation-screen" class="hidden">
+  <div class="act-blob"></div>
+  <div class="act-deco">🧶</div>
+  <div class="act-content">
+    <div class="act-logo">🧶</div>
+    <h1 class="act-title">Crochêladora</h1>
+    <p class="act-sub">Nós &amp; Linhas</p>
+    <div class="act-card">
+      <div class="act-card-icon">🔑</div>
+      <h2 class="act-card-title">Ativar App</h2>
+      <p class="act-card-desc">Insira a chave de ativação que você recebeu após a compra.</p>
+      <div class="act-input-wrap">
+        <input
+          type="text"
+          id="act-key-input"
+          class="act-key-input"
+          placeholder="CROC-XXXX-XXXX-XXXX"
+          maxlength="19"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="characters"
+          spellcheck="false"
+        >
+      </div>
+      <div id="act-error" class="act-error hidden"></div>
+      <button id="act-btn" class="act-btn">🔓 Ativar</button>
+      <p class="act-help">Você recebeu sua chave ao adquirir o app.<br>Dúvidas? Fale com quem te vendeu.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ====== BUDGET SHARE VIEW ====== -->
+<div id="budget-view" class="hidden">
+  <!-- Business brand (user's own brand) -->
+  <div id="budget-biz-section" class="budget-biz-section hidden">
+    <img id="budget-biz-logo" class="budget-biz-logo hidden" alt="Logo">
+    <div class="budget-biz-texts">
+      <div class="budget-biz-name" id="budget-biz-name"></div>
+      <div class="budget-biz-info" id="budget-biz-info"></div>
+    </div>
+  </div>
+  <div class="budget-card">
+    <div class="budget-piece-label">Orçamento</div>
+    <div class="budget-piece-name" id="budget-piece-name">—</div>
+    <div class="budget-cat"><span class="category-badge" id="budget-category"></span></div>
+    <div class="budget-divider"></div>
+    <div class="budget-price-label">Valor da peça</div>
+    <div class="budget-price" id="budget-price">R$ 0,00</div>
+    <div id="budget-notes-wrap" class="budget-notes-wrap hidden">
+      <div class="budget-notes-label">Observações</div>
+      <div class="budget-notes-text" id="budget-notes"></div>
+    </div>
+    <div class="budget-date">Orçamento gerado em <span id="budget-date"></span></div>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="app-header">
+    <button id="btn-back" class="btn-icon hidden" aria-label="Voltar">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+    </button>
+    <div id="header-title">
+      <span class="header-logo">🧶</span>
+      <div>
+        <span>Crochêladora</span>
+        <small class="header-subtitle">Nós &amp; Linhas</small>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="btn-theme" class="btn-icon" aria-label="Alternar tema" title="Modo claro/escuro">
+        <svg id="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button id="btn-settings" class="btn-icon" aria-label="Configurações">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content">
+
+    <!-- ====== HOME ====== -->
+    <section id="screen-home" class="screen active">
+      <div class="home-hero">
+        <div class="hero-content">
+          <h1 id="hero-title">Olá, artesãos! 😊</h1>
+          <p id="hero-sub">Calcule o preço justo das suas criações!</p>
+        </div>
+      </div>
+      <div class="home-stats" id="home-stats"></div>
+      <div id="install-banner-wrap"></div>
+      <div class="home-actions">
+        <button class="btn-secondary btn-large" id="btn-view-history">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Minhas Peças
+        </button>
+      </div>
+      <div class="recent-section" id="recent-section">
+        <h2 class="section-title">Calculadas Recentemente</h2>
+        <div id="recent-list"></div>
+      </div>
+    </section>
+
+    <!-- ====== CALCULATOR ====== -->
+    <section id="screen-calculator" class="screen">
+      <div class="steps-bar">
+        <div class="step-item active" id="sdot-1"><div class="step-dot">1</div><span>Peça</span></div>
+        <div class="step-line" id="sline-1"></div>
+        <div class="step-item" id="sdot-2"><div class="step-dot">2</div><span>Materiais</span></div>
+        <div class="step-line" id="sline-2"></div>
+        <div class="step-item" id="sdot-3"><div class="step-dot">3</div><span>Trabalho</span></div>
+        <div class="step-line" id="sline-3"></div>
+        <div class="step-item" id="sdot-4"><div class="step-dot">4</div><span>Lucro</span></div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="calc-step active" id="cstep-1">
+        <div class="step-header"><h2>Sobre a Peça</h2><p>Dê um nome à sua criação ✨</p></div>
+        <div class="form-group">
+          <label for="piece-name">Nome da Peça *</label>
+          <input type="text" id="piece-name" placeholder="Ex: Tapete Oval de Crochê">
+        </div>
+        <div class="form-group">
+          <label for="piece-category">Categoria</label>
+          <select id="piece-category">
+            <option value="">Selecione...</option>
+            <option value="decoracao">🏠 Decoração</option>
+            <option value="vestuario">👗 Vestuário</option>
+            <option value="brinquedos">🧸 Amigurumis</option>
+            <option value="acessorios">👜 Acessórios</option>
+            <option value="utilidades">🧺 Utilidades</option>
+            <option value="outro">✨ Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="piece-notes">Observações (opcional)</label>
+          <textarea id="piece-notes" placeholder="Tamanho, cores, detalhes..." rows="3"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="calc-step" id="cstep-2">
+        <div class="step-header"><h2>Materiais Utilizados</h2><p>Adicione os fios, linhas e acessórios 🧶</p></div>
+        <div id="materials-list"></div>
+        <div class="mat-add-row">
+          <button class="btn-add" id="btn-add-material">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Digitar Manualmente
+          </button>
+          <button class="btn-add-yarn" id="btn-add-yarn-pick">
+            🧶 Fio Cadastrado
+          </button>
+        </div>
+
+        <!-- Acessórios -->
+        <div class="divider-label"><span>Acessórios</span></div>
+        <div id="accessories-list"></div>
+        <button class="btn-add" id="btn-add-accessory">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Adicionar Acessório
+        </button>
+
+        <!-- Outros Gastos -->
+        <div class="divider-label other-costs-divider"><span>Outros Gastos</span></div>
+        <div class="other-costs-grid">
+          <div class="form-group">
+            <label for="inp-packaging">Embalagem</label>
+            <div class="input-wrap">
+              <span class="unit-tag pre">R$</span>
+              <input type="number" id="inp-packaging" placeholder="0,00" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="inp-shipping">Envio</label>
+            <div class="input-wrap">
+              <span class="unit-tag pre">R$</span>
+              <input type="number" id="inp-shipping" placeholder="0,00" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="inp-other-cost">Outros</label>
+            <div class="input-wrap">
+              <span class="unit-tag pre">R$</span>
+              <input type="number" id="inp-other-cost" placeholder="0,00" min="0" step="0.01">
+            </div>
+          </div>
+        </div>
+
+        <div class="subtotal-bar">
+          <span>Subtotal de materiais:</span>
+          <strong id="mat-total">R$ 0,00</strong>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="calc-step" id="cstep-3">
+        <div class="step-header"><h2>Tempo &amp; Mão de Obra</h2><p>Seu tempo tem valor! ⏱️</p></div>
+        <div class="form-group">
+          <label for="inp-hours">Horas trabalhadas</label>
+          <div class="input-wrap">
+            <input type="number" id="inp-hours" placeholder="0" min="0" step="1">
+            <span class="unit-tag">horas</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="inp-minutes">Minutos adicionais</label>
+          <div class="input-wrap">
+            <input type="number" id="inp-minutes" placeholder="0" min="0" max="59">
+            <span class="unit-tag">min</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="inp-hourly-rate">Valor por hora *</label>
+          <div class="input-wrap">
+            <span class="unit-tag pre">R$</span>
+            <input type="number" id="inp-hourly-rate" placeholder="25,00" min="0" step="0.01">
+          </div>
+          <small class="hint">Quanto você quer ganhar por hora de trabalho?</small>
+        </div>
+        <div class="info-tip">
+          <span class="tip-icon">💡</span>
+          <p>O valor médio de mercado para artesãs é entre <strong>R$ 15,00</strong> e <strong>R$ 40,00</strong> por hora.</p>
+        </div>
+        <div class="labor-bar">
+          <span>Custo de mão de obra:</span>
+          <strong id="labor-cost-val">R$ 0,00</strong>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="calc-step" id="cstep-4">
+        <div class="step-header"><h2>Custos Fixos &amp; Lucro</h2><p>Último passo para o preço final! 💰</p></div>
+
+        <div class="form-group">
+          <label for="inp-monthly-fixed">Custo fixo mensal</label>
+          <div class="input-wrap">
+            <span class="unit-tag pre">R$</span>
+            <input type="number" id="inp-monthly-fixed" placeholder="0,00" min="0" step="0.01">
+          </div>
+          <small class="hint">Aluguel, energia, internet, etc.</small>
+        </div>
+        <div class="form-group">
+          <label for="inp-pieces-month">Peças produzidas por mês</label>
+          <div class="input-wrap">
+            <input type="number" id="inp-pieces-month" placeholder="0" min="1" step="1">
+            <span class="unit-tag">peças</span>
+          </div>
+          <small class="hint">Quantas peças você consegue fazer por mês?</small>
+        </div>
+
+        <div class="form-group">
+          <label for="inp-fixed-cost">Custo fixo desta peça</label>
+          <div class="input-wrap">
+            <span class="unit-tag pre">R$</span>
+            <input type="number" id="inp-fixed-cost" placeholder="0,00" min="0" step="0.01">
+          </div>
+          <small class="hint">Calculado automaticamente ÷ número de peças (ou informe manualmente)</small>
+        </div>
+
+        <div class="form-group">
+          <label for="inp-profit">Margem de lucro</label>
+          <div class="input-wrap">
+            <input type="number" id="inp-profit" placeholder="30" min="0" max="999">
+            <span class="unit-tag">%</span>
+          </div>
+          <small class="hint">Percentual de lucro sobre o custo total</small>
+        </div>
+        <div class="info-tip">
+          <span class="tip-icon">💡</span>
+          <p>Para artesanato, recomenda-se uma margem de <strong>30% a 100%</strong> sobre o custo total.</p>
+        </div>
+        <div class="cost-preview" id="cost-preview"></div>
+      </div>
+
+      <div class="calc-nav">
+        <button class="btn-secondary" id="btn-prev" disabled>← Anterior</button>
+        <button class="btn-primary" id="btn-next">Próximo →</button>
+      </div>
+    </section>
+
+    <!-- ====== RESULT ====== -->
+    <section id="screen-result" class="screen">
+      <div class="result-hero">
+        <div class="result-piece-name" id="res-name">—</div>
+        <div class="result-price-label">Preço sugerido de venda</div>
+        <div class="result-price" id="res-price">R$ 0,00</div>
+        <span class="result-cat-badge" id="res-badge"></span>
+      </div>
+      <div class="result-breakdown">
+        <h3>Detalhamento</h3>
+        <div class="bd-row"><div class="bd-left"><span class="bd-icon">🧶</span><span>Materiais</span></div><span class="bd-val" id="res-mat">R$ 0,00</span></div>
+        <div class="bd-row"><div class="bd-left"><span class="bd-icon">⏱️</span><span>Mão de Obra</span></div><span class="bd-val" id="res-labor">R$ 0,00</span></div>
+        <div class="bd-row"><div class="bd-left"><span class="bd-icon">🏠</span><span>Custos Fixos</span></div><span class="bd-val" id="res-fixed">R$ 0,00</span></div>
+        <div class="bd-sep"></div>
+        <div class="bd-row"><div class="bd-left"><span>Custo Total</span></div><span class="bd-val" id="res-cost">R$ 0,00</span></div>
+        <div class="bd-row highlight"><div class="bd-left"><span class="bd-icon">📈</span><span id="res-profit-label">Lucro (30%)</span></div><span class="bd-val" id="res-profit">R$ 0,00</span></div>
+        <div class="bd-sep"></div>
+        <div class="bd-row grand"><div class="bd-left">💰 Preço Final</div><span class="bd-val" id="res-final">R$ 0,00</span></div>
+      </div>
+      <div class="result-actions">
+        <button class="btn-primary" id="btn-save-piece">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar Peça
+        </button>
+        <button class="btn-share" id="btn-share-result">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Compartilhar Orçamento
+        </button>
+        <button class="btn-secondary" id="btn-new-from-result">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Nova Peça
+        </button>
+      </div>
+    </section>
+
+    <!-- ====== HISTORY ====== -->
+    <section id="screen-history" class="screen">
+      <div class="screen-title-bar"><h2>Minhas Peças</h2><p>Todas as suas criações calculadas</p></div>
+      <div class="filter-bar" id="filter-bar">
+        <button class="filter-btn active" data-filter="all">Todas</button>
+        <button class="filter-btn" data-filter="decoracao">🏠 Decoração</button>
+        <button class="filter-btn" data-filter="vestuario">👗 Vestuário</button>
+        <button class="filter-btn" data-filter="brinquedos">🧸 Amigurumis</button>
+        <button class="filter-btn" data-filter="acessorios">👜 Acessórios</button>
+        <button class="filter-btn" data-filter="utilidades">🧺 Utilidades</button>
+        <button class="filter-btn" data-filter="outro">✨ Outro</button>
+      </div>
+      <div id="history-list"></div>
+      <div id="history-empty" class="empty-state hidden">
+        <div class="empty-icon">🧶</div>
+        <h3>Nenhuma peça salva ainda</h3>
+        <p>Calcule o preço de uma peça e salve aqui!</p>
+        <button class="btn-primary" id="btn-calc-from-history">Nova Peça</button>
+      </div>
+    </section>
+
+    <!-- ====== YARNS ====== -->
+    <section id="screen-yarns" class="screen">
+      <div class="yarns-topbar">
+        <div class="yarns-topbar-text">
+          <h2>Meus Fios</h2>
+          <p>Cadastre para usar nos cálculos por grama</p>
+        </div>
+        <button class="btn-primary" id="btn-add-yarn" style="white-space:nowrap;padding:10px 16px;font-size:.85rem">
+          + Novo Fio
+        </button>
+      </div>
+      <div id="yarns-list"></div>
+      <div id="yarns-empty" class="empty-state hidden">
+        <div class="empty-icon">🧶</div>
+        <h3>Nenhum fio cadastrado</h3>
+        <p>Cadastre seus fios e use-os nos cálculos informando apenas as gramas utilizadas!</p>
+        <button class="btn-primary" id="btn-add-yarn-empty">+ Cadastrar Primeiro Fio</button>
+      </div>
+    </section>
+
+    <!-- ====== TIMER ====== -->
+    <section id="screen-timer" class="screen">
+      <div class="timer-topbar">
+        <h2>⏱️ Cronômetro</h2>
+        <p>Meça o tempo e calcule o custo em tempo real</p>
+        <div class="timer-rate-row">
+          <label for="timer-hourly-rate">Valor/hora:</label>
+          <div class="input-wrap">
+            <span class="unit-tag pre">R$</span>
+            <input type="number" id="timer-hourly-rate" placeholder="25,00" min="0" step="0.01">
+          </div>
+          <button class="btn-save-rate" id="btn-save-timer-rate">Salvar</button>
+        </div>
+      </div>
+      <div class="timer-add-row">
+        <button class="btn-primary btn-full" id="btn-add-timer">+ Novo Cronômetro</button>
+      </div>
+      <div id="timers-container"></div>
+      <div id="timers-empty" class="empty-state hidden">
+        <div class="empty-icon">⏱️</div>
+        <h3>Nenhum cronômetro ativo</h3>
+        <p>Adicione um cronômetro para medir o tempo de confecção e calcular o custo automaticamente!</p>
+      </div>
+    </section>
+
+    <!-- ====== SETTINGS ====== -->
+    <section id="screen-settings" class="screen">
+      <div class="screen-title-bar"><h2>Configurações</h2><p>Preferências do app</p></div>
+
+      <!-- Business Info -->
+      <div class="settings-section">
+        <h3 class="settings-lang-title">Minha Marca / Negócio</h3>
+        <p style="font-size:.78rem;color:var(--text-3);margin-bottom:14px">Aparece no orçamento quando você compartilhar.</p>
+        <div class="form-group">
+          <label for="biz-name">Nome do negócio</label>
+          <input type="text" id="biz-name" placeholder="Ex: Ateliê da Ana">
+        </div>
+        <div class="form-group">
+          <label for="biz-logo-inp">Logo (opcional)</label>
+          <input type="file" id="biz-logo-inp" accept="image/*" style="width:100%;padding:10px;border:2px dashed var(--border);border-radius:var(--r-s);cursor:pointer;background:var(--surface);color:var(--text-2);font-size:.85rem">
+          <div id="biz-logo-preview" style="margin-top:8px"></div>
+        </div>
+        <div class="form-group">
+          <label for="biz-info">Informações de contato / endereço</label>
+          <textarea id="biz-info" rows="4" placeholder="Ex: WhatsApp: (11) 99999-9999&#10;Instagram: @meuatelie&#10;Rua das Flores, 123"></textarea>
+        </div>
+        <button class="btn-primary" id="btn-save-biz" style="width:100%">
+          💾 Salvar informações
+        </button>
+      </div>
+
+      <!-- Language -->
+      <div class="settings-section">
+        <h3 class="settings-lang-title">Idioma</h3>
+        <div class="settings-select-wrap">
+          <select id="lang-selector" class="settings-select">
+            <option value="pt">🇧🇷 Português</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="zh">🇨🇳 中文</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Font Size -->
+      <div class="settings-section">
+        <h3 class="settings-font-title">Tamanho da Fonte</h3>
+        <div class="font-size-controls">
+          <button class="btn-font-ctrl" id="btn-font-minus">A−</button>
+          <span id="font-size-display" class="font-size-label">16px</span>
+          <button class="btn-font-ctrl" id="btn-font-plus">A+</button>
+          <button class="btn-font-reset btn-secondary" id="btn-font-reset" style="margin-left:8px;padding:8px 14px;font-size:.8rem">Padrão</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav">
+    <button class="nav-tab active" data-nav="home" id="nav-home">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Início</span>
+    </button>
+    <button class="nav-tab" data-nav="yarns" id="nav-yarns">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></svg>
+      <span>Fios</span>
+    </button>
+    <button class="nav-center-btn" id="nav-new-piece">
+      <div class="nav-center-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <span>Nova Peça</span>
+    </button>
+    <button class="nav-tab" data-nav="timer" id="nav-timer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Cronômetro</span>
+    </button>
+    <button class="nav-tab" data-nav="history" id="nav-history">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Peças</span>
+    </button>
+  </nav>
+
+</div><!-- #app -->
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Confirm Modal -->
+<div id="modal-overlay" class="modal-overlay hidden">
+  <div class="modal" id="modal-box">
+    <h3 id="modal-title">Confirmar</h3>
+    <p id="modal-message">Tem certeza?</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modal-cancel">Cancelar</button>
+      <button class="btn-danger" id="modal-confirm">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Yarn Form Overlay -->
+<div id="yarn-form-overlay" class="modal-overlay-bottom hidden">
+  <div class="bottom-sheet">
+    <h3 id="yarn-form-title">Novo Fio</h3>
+    <input type="hidden" id="yarn-id-inp">
+    <div class="form-group">
+      <label for="yarn-name-inp">Nome do Fio *</label>
+      <input type="text" id="yarn-name-inp" placeholder="Ex: Fio de Algodão Cru">
+    </div>
+    <div class="form-group">
+      <label for="yarn-brand-inp">Marca (opcional)</label>
+      <input type="text" id="yarn-brand-inp" placeholder="Ex: Círculo, Pingouin...">
+    </div>
+    <div class="form-group">
+      <label for="yarn-weight-inp">Peso da embalagem (g) *</label>
+      <div class="input-wrap">
+        <input type="number" id="yarn-weight-inp" placeholder="100" min="0" step="1">
+        <span class="unit-tag">g</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="yarn-price-inp">Preço da embalagem *</label>
+      <div class="input-wrap">
+        <span class="unit-tag pre">R$</span>
+        <input type="number" id="yarn-price-inp" placeholder="15,00" min="0" step="0.01">
+      </div>
+      <div class="ppg-live" id="yarn-ppg-val"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-secondary" id="btn-yarn-form-cancel">Cancelar</button>
+      <button class="btn-primary" id="btn-yarn-form-save">Salvar Fio</button>
+    </div>
+  </div>
+</div>
+
+<!-- Yarn Picker Overlay -->
+<div id="yarn-picker-overlay" class="modal-overlay-bottom hidden">
+  <div class="bottom-sheet">
+    <h3>🧶 Selecionar Fio Cadastrado</h3>
+    <div class="picker-list" id="yarn-picker-list"></div>
+    <div id="yarn-picker-grams-wrap" class="grams-field hidden">
+      <div class="form-group" style="margin-bottom:0">
+        <label for="yarn-picker-grams">Quantas gramas utilizou?</label>
+        <div class="input-wrap">
+          <input type="number" id="yarn-picker-grams" placeholder="50" min="0" step="0.1">
+          <span class="unit-tag">g</span>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-actions" style="margin-top:16px">
+      <button class="btn-secondary" id="btn-yarn-picker-cancel">Cancelar</button>
+      <button class="btn-primary" id="btn-yarn-picker-confirm">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/license.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/yarns.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
