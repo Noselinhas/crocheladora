@@ -14,11 +14,8 @@ const License = (() => {
   const STORAGE_KEY = 'croc_lic_v1';
 
   // ── Firebase config ──────────────────────────────────
-  // Preencha com a URL do seu Firebase Realtime Database
-  // após seguir as instruções no keygen.html.
-  // Exemplo: 'https://crocheladora-abc123-default-rtdb.firebaseio.com'
-  // Deixe '' para desativar a verificação online.
-  const FIREBASE_DB_URL = localStorage.getItem('croc_firebase_url') || '';
+  // URL do Realtime Database — impede ativação em múltiplos dispositivos.
+  const FIREBASE_DB_URL = 'https://crocheladora-default-rtdb.firebaseio.com';
 
   // ── Crypto helpers ───────────────────────────────────
   function _djb2(str) {
