@@ -837,11 +837,23 @@ const App = {
 
   // ── PWA Install ───────────────────────────────────
   handlePWAInstall() {
+    // Android / Desktop Chrome: evento nativo
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       this.deferredInstallPrompt = e;
       this.showInstallBanner();
     });
+
+    // iOS Safari / Chrome no iPhone: beforeinstallprompt NÃO existe,
+    // é preciso instruir o usuário a usar o botão Compartilhar → "Adicionar à Tela Inicial"
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPad iOS 13+
+    const isStandalone = window.navigator.standalone === true ||
+                         window.matchMedia('(display-mode: standalone)').matches;
+    if (isIOS && !isStandalone) {
+      // Pequeno delay para não disputar com outros banners
+      setTimeout(() => this.showIOSInstallBanner(), 1500);
+    }
   },
 
   showInstallBanner() {
@@ -854,6 +866,33 @@ const App = {
         <button class="btn-dismiss" id="btn-dismiss-install" aria-label="Fechar">×</button>
       </div>`;
     document.getElementById('btn-install').onclick         = () => this.promptInstall();
+    document.getElementById('btn-dismiss-install').onclick = () => { wrap.innerHTML = ''; };
+  },
+
+  showIOSInstallBanner() {
+    const wrap = document.getElementById('install-banner-wrap');
+    if (!wrap || wrap.innerHTML) return;
+    wrap.innerHTML = `
+      <div class="install-banner ios-install-banner" style="margin-top:12px">
+        <div class="ios-banner-header">
+          <span>📱 <strong>Instale o app no seu iPhone/iPad!</strong></span>
+          <button class="btn-dismiss" id="btn-dismiss-install" aria-label="Fechar">×</button>
+        </div>
+        <ol class="ios-steps">
+          <li>
+            Toque no botão <strong>Compartilhar</strong>
+            <svg class="ios-share-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+            na barra do Safari
+          </li>
+          <li>Role para baixo e toque em <strong>"Adicionar à Tela Inicial"</strong> <span class="ios-icon-badge">＋</span></li>
+          <li>Toque em <strong>"Adicionar"</strong> para confirmar</li>
+        </ol>
+        <p class="ios-banner-note">⚠️ Abra este link no <strong>Safari</strong> (não funciona no Chrome do iPhone)</p>
+      </div>`;
     document.getElementById('btn-dismiss-install').onclick = () => { wrap.innerHTML = ''; };
   },
 

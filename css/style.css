@@ -454,14 +454,33 @@ button,input,select,textarea{font-family:inherit}
 .dm-grand span:last-child{font-weight:900;color:var(--primary);font-size:1rem}
 
 /* ── PWA INSTALL ────────────────────────────── */
-.install-banner{display:flex;align-items:center;gap:12px;background:var(--surface);
+.install-banner{background:var(--surface);
   border:1.5px solid var(--primary-light);border-radius:var(--r-m);margin:0 20px;
-  padding:12px 14px;box-shadow:var(--shadow-s)}
-.install-banner p{flex:1;font-size:.8rem;color:var(--text-2);line-height:1.4}
+  padding:14px 16px;box-shadow:var(--shadow-s)}
+.install-banner p{font-size:.82rem;color:var(--text-2);line-height:1.4;flex:1}
 .install-banner strong{color:var(--text)}
+/* Standard (Android/Desktop) banner — row layout */
+.install-banner:not(.ios-install-banner){display:flex;align-items:center;gap:12px}
 .btn-install{background:var(--grad);color:#fff;border:none;border-radius:var(--r-s);
   padding:8px 14px;font-size:.78rem;font-weight:800;cursor:pointer;white-space:nowrap;transition:var(--ease)}
+.btn-install:hover{transform:translateY(-1px)}
 .btn-dismiss{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-3);flex-shrink:0}
+
+/* iOS-specific install banner */
+.ios-install-banner{display:flex;flex-direction:column;gap:10px;
+  border-color:var(--primary);border-width:2px;animation:fadeUp .4s ease}
+.ios-banner-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ios-banner-header span{font-size:.88rem;line-height:1.4}
+.ios-steps{padding-left:20px;display:flex;flex-direction:column;gap:6px;margin:2px 0}
+.ios-steps li{font-size:.82rem;color:var(--text-2);line-height:1.5}
+.ios-steps strong{color:var(--text)}
+.ios-share-icon{display:inline;vertical-align:middle;margin:0 2px;
+  stroke:var(--primary);position:relative;top:-1px}
+.ios-icon-badge{display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;background:var(--primary);color:#fff;border-radius:4px;
+  font-size:.72rem;font-weight:900;vertical-align:middle;margin-left:2px;line-height:1}
+.ios-banner-note{font-size:.74rem;color:var(--text-3);line-height:1.4;margin-top:2px;
+  padding:7px 10px;background:var(--surface-alt);border-radius:var(--r-s)}
 
 @media(max-width:380px){
   .home-hero{padding:24px 16px 42px}
