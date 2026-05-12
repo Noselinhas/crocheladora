@@ -67,6 +67,10 @@
     <div class="budget-divider"></div>
     <div class="budget-price-label">Valor da peça</div>
     <div class="budget-price" id="budget-price">R$ 0,00</div>
+    <div id="budget-payment-wrap" class="budget-payment-wrap hidden">
+      <div class="budget-pm-label" id="budget-pm-label"></div>
+      <div class="budget-pm-each" id="budget-pm-each"></div>
+    </div>
     <div id="budget-notes-wrap" class="budget-notes-wrap hidden">
       <div class="budget-notes-label">Observações</div>
       <div class="budget-notes-text" id="budget-notes"></div>
@@ -323,7 +327,8 @@
 
       <!-- Payment options table -->
       <div id="payment-table-wrap" class="payment-table-wrap hidden">
-        <h3>💳 Preços por Forma de Pagamento</h3>
+        <h3>💳 Formas de Pagamento</h3>
+        <p class="pt-hint">Toque em uma opção para selecionar a forma de pagamento do orçamento</p>
         <div id="payment-table"></div>
       </div>
 

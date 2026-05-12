@@ -160,29 +160,40 @@ const App = {
     const view = document.getElementById('budget-view');
     const biz  = Storage.getBusinessInfo();
 
-    // Business branding (user's own brand, not Crochêladora)
+    // Business branding
     const bizNameEl = document.getElementById('budget-biz-name');
     const bizInfoEl = document.getElementById('budget-biz-info');
     const bizLogoEl = document.getElementById('budget-biz-logo');
     const bizBrandSection = document.getElementById('budget-biz-section');
-
     if (biz.name || biz.info || biz.logo) {
       bizBrandSection.classList.remove('hidden');
       bizNameEl.textContent = biz.name || '';
       bizInfoEl.textContent = biz.info || '';
       bizInfoEl.style.display = biz.info ? '' : 'none';
-      if (biz.logo) {
-        bizLogoEl.src = biz.logo;
-        bizLogoEl.classList.remove('hidden');
-      } else {
-        bizLogoEl.classList.add('hidden');
-      }
+      if (biz.logo) { bizLogoEl.src = biz.logo; bizLogoEl.classList.remove('hidden'); }
+      else { bizLogoEl.classList.add('hidden'); }
     } else {
       bizBrandSection.classList.add('hidden');
     }
 
     document.getElementById('budget-piece-name').textContent = data.n || '—';
     document.getElementById('budget-price').textContent = Calculator.fmt(data.p || 0);
+
+    // Payment method
+    const pmWrap  = document.getElementById('budget-payment-wrap');
+    const pmLabel = document.getElementById('budget-pm-label');
+    const pmEach  = document.getElementById('budget-pm-each');
+    if (data.pm && pmWrap) {
+      pmWrap.classList.remove('hidden');
+      if (pmLabel) pmLabel.textContent = data.pm;
+      if (pmEach) {
+        pmEach.textContent = (data.pe && data.pi > 1) ? `${data.pi}× de ${Calculator.fmt(data.pe)}/mês` : '';
+        pmEach.style.display = (data.pe && data.pi > 1) ? '' : 'none';
+      }
+    } else if (pmWrap) {
+      pmWrap.classList.add('hidden');
+    }
+
     const catEl = document.getElementById('budget-category');
     catEl.textContent = this.CATEGORY_LABELS[data.c] || '';
     catEl.style.display = data.c ? '' : 'none';
@@ -199,12 +210,16 @@ const App = {
 
   shareResult() {
     if (!this.currentCalc || !this.lastResult) return;
+    const sp = this.currentCalc.selectedPayment;
     const data = {
       n: this.currentCalc.name,
       c: this.currentCalc.category,
-      p: this.lastResult.finalPrice,
+      p: sp ? sp.price : this.lastResult.finalPrice,
       o: this.currentCalc.notes || '',
-      d: new Date().toLocaleDateString('pt-BR')
+      d: new Date().toLocaleDateString('pt-BR'),
+      pm: sp ? sp.label : null,
+      pi: sp?.installments || null,
+      pe: sp?.each || null
     };
     const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
     const url = `${location.origin}${location.pathname}#share=${encoded}`;
@@ -213,7 +228,7 @@ const App = {
     if (navigator.share) {
       navigator.share({
         title: `Orçamento ${from}: ${data.n}`,
-        text: `Olá! Segue o orçamento para "${data.n}": ${Calculator.fmt(data.p)}`,
+        text: `Olá! Segue o orçamento para "${data.n}": ${Calculator.fmt(data.p)}${sp ? ` (${sp.label})` : ''}`,
         url
       }).catch(() => this.copyLink(url));
     } else {
@@ -402,7 +417,8 @@ const App = {
       piecesPerMonth:    s.lastPiecesPerMonth || '',
       packagingCost:     '',
       shippingCost:      '',
-      otherCost:         ''
+      otherCost:         '',
+      selectedPayment:   null
     };
 
     const setVal = (id, val) => {
@@ -768,81 +784,86 @@ const App = {
     const table = document.getElementById('payment-table');
     if (!wrap || !table) return;
 
-    // Se nenhuma taxa foi configurada ainda, esconde o bloco
     const hasAnyFee = Object.keys(fees).length > 0;
     if (!hasAnyFee) { wrap.classList.add('hidden'); return; }
 
-    // "Preço cheio" = preço base + taxa do cartão 1×
+    // Preço cheio = basePrice + taxa 1× (já embutida no preço de tabela)
     const fee1x     = (fees.i1 != null) ? fees.i1 : 0;
     const fullPrice = basePrice * (1 + fee1x / 100);
 
-    const rows = [];
+    // Monta lista de opções de pagamento
+    const options = [];
 
-    // ── Pix / Dinheiro — sempre aparece ──
-    if (fees.pix != null && fees.pix > 0) {
-      const discounted = fullPrice * (1 - fees.pix / 100);
-      rows.push(`
-        <div class="pt-row pt-highlight">
-          <div class="pt-label">
-            <span class="pt-badge pix">🟢 Pix / Dinheiro</span>
-            <span class="pt-discount">${fees.pix}% de desconto</span>
-          </div>
-          <div class="pt-price">
-            <span class="pt-total">${Calculator.fmt(discounted)}</span>
-            <span class="pt-each">à vista</span>
-          </div>
-        </div>`);
-    } else {
-      // sem desconto configurado → mostra preço cheio no Pix
-      rows.push(`
-        <div class="pt-row">
-          <div class="pt-label">
-            <span class="pt-badge pix">🟢 Pix / Dinheiro</span>
-          </div>
-          <div class="pt-price">
-            <span class="pt-total">${Calculator.fmt(fullPrice)}</span>
-            <span class="pt-each">à vista</span>
-          </div>
-        </div>`);
-    }
+    // ── Pix / Dinheiro ──
+    const pixPrice = (fees.pix > 0) ? fullPrice * (1 - fees.pix / 100) : fullPrice;
+    options.push({
+      key: 'pix', label: 'Pix / Dinheiro', badge: 'pix',
+      price: pixPrice, each: null, installments: null,
+      tag: fees.pix > 0 ? `${fees.pix}% de desconto` : null, tagClass: 'pt-discount'
+    });
 
     // ── Cartão 1× ──
     if (fees.i1 != null) {
-      const feeTag = fee1x > 0 ? `<span class="pt-fee-tag">+${fee1x}% taxa</span>` : '';
-      rows.push(`
-        <div class="pt-row">
-          <div class="pt-label">
-            <span class="pt-badge card">💳 1× débito / à vista</span>
-            ${feeTag}
-          </div>
-          <div class="pt-price">
-            <span class="pt-total">${Calculator.fmt(fullPrice)}</span>
-          </div>
-        </div>`);
+      options.push({
+        key: '1', label: '1× débito / à vista', badge: 'card',
+        price: fullPrice, each: null, installments: 1,
+        tag: fee1x > 0 ? `+${fee1x}% taxa` : null, tagClass: 'pt-fee-tag'
+      });
     }
 
-    // ── Cartão 2×–12× ──
+    // ── Cartão 2×–12× — taxa aplicada SOMENTE sobre basePrice (independente) ──
     for (let i = 2; i <= 12; i++) {
       const feeKey = `i${i}`;
       if (fees[feeKey] == null) continue;
       const feePct = fees[feeKey];
-      const total  = fullPrice * (1 + feePct / 100);
+      const total  = basePrice * (1 + feePct / 100); // somente a taxa da parcela referida
       const each   = total / i;
-      const feeTag = feePct > 0 ? `<span class="pt-fee-tag">+${feePct}% taxa</span>` : '';
-      rows.push(`
-        <div class="pt-row">
-          <div class="pt-label">
-            <span class="pt-badge card">💳 ${i}× parcelas de</span>
-            ${feeTag}
-          </div>
-          <div class="pt-price">
-            <span class="pt-each">${Calculator.fmt(each)}</span>
-            <span class="pt-total">${Calculator.fmt(total)}</span>
-          </div>
-        </div>`);
+      options.push({
+        key: String(i), label: `${i}× parcelas`, badge: 'card',
+        price: total, each, installments: i,
+        tag: feePct > 0 ? `+${feePct}% taxa` : null, tagClass: 'pt-fee-tag'
+      });
     }
 
-    table.innerHTML = rows.join('');
+    const selected = this.currentCalc?.selectedPayment?.key || null;
+
+    table.innerHTML = options.map(opt => {
+      const isSel = selected === opt.key;
+      return `
+        <div class="pt-row${isSel ? ' pt-selected' : ''}" data-key="${opt.key}"
+          data-price="${opt.price}" data-each="${opt.each || ''}" data-label="${opt.label}" data-inst="${opt.installments || ''}">
+          <div class="pt-check">${isSel ? '✓' : ''}</div>
+          <div class="pt-label">
+            <span class="pt-badge ${opt.badge}">${opt.badge === 'pix' ? '🟢' : '💳'} ${opt.label}</span>
+            ${opt.tag ? `<span class="${opt.tagClass}">${opt.tag}</span>` : ''}
+          </div>
+          <div class="pt-price">
+            ${opt.each ? `<span class="pt-each">${Calculator.fmt(opt.each)}/mês</span>` : ''}
+            <span class="pt-total">${Calculator.fmt(opt.price)}</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    // Clique para selecionar forma de pagamento
+    table.querySelectorAll('.pt-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const key  = row.dataset.key;
+        const price = parseFloat(row.dataset.price);
+        const each  = row.dataset.each ? parseFloat(row.dataset.each) : null;
+        const label = row.dataset.label;
+        const inst  = row.dataset.inst ? parseInt(row.dataset.inst) : null;
+        this.currentCalc.selectedPayment = { key, label, price, each, installments: inst };
+        // Atualiza visual
+        table.querySelectorAll('.pt-row').forEach(r => {
+          r.classList.remove('pt-selected');
+          r.querySelector('.pt-check').textContent = '';
+        });
+        row.classList.add('pt-selected');
+        row.querySelector('.pt-check').textContent = '✓';
+        this.toast(`✅ ${label} selecionado`, 'success');
+      });
+    });
+
     wrap.classList.remove('hidden');
   },
 
