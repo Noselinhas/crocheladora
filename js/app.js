@@ -342,6 +342,27 @@ const App = {
     if (bizLogoPreview && biz.logo) {
       bizLogoPreview.innerHTML = `<img src="${biz.logo}" style="max-width:120px;max-height:80px;border-radius:8px;margin-top:8px;">`;
     }
+
+    // Load card fees
+    const fees = Storage.getCardFees();
+    const pixEl = document.getElementById('fee-pix');
+    if (pixEl) pixEl.value = fees.pix != null ? fees.pix : '';
+    for (let i = 1; i <= 12; i++) {
+      const el = document.getElementById(`fee-${i}`);
+      if (el) el.value = fees[`i${i}`] != null ? fees[`i${i}`] : '';
+    }
+  },
+
+  saveCardFees() {
+    const fees = {};
+    const pixEl = document.getElementById('fee-pix');
+    if (pixEl && pixEl.value !== '') fees.pix = parseFloat(pixEl.value);
+    for (let i = 1; i <= 12; i++) {
+      const el = document.getElementById(`fee-${i}`);
+      if (el && el.value !== '') fees[`i${i}`] = parseFloat(el.value);
+    }
+    Storage.saveCardFees(fees);
+    this.toast('Taxas salvas! ✅', 'success');
   },
 
   saveBusinessInfo() {
@@ -733,9 +754,95 @@ const App = {
     document.getElementById('res-profit').textContent       = Calculator.fmt(result.profitAmount);
     document.getElementById('res-final').textContent        = Calculator.fmt(result.finalPrice);
 
+    this.renderPaymentTable(result.finalPrice);
+
     document.getElementById('btn-save-piece').textContent = '💾 Salvar Peça';
     document.getElementById('btn-save-piece').disabled    = false;
     this.navigate('result');
+  },
+
+  // ── Payment Table ───────────────────────────────────────
+  renderPaymentTable(basePrice) {
+    const fees = Storage.getCardFees();
+    const wrap  = document.getElementById('payment-table-wrap');
+    const table = document.getElementById('payment-table');
+    if (!wrap || !table) return;
+
+    // O "preço cheio" é o preço base + taxa do cartão 1×
+    // Assim o artesão já embute o custo da maquininha no preço de tabela.
+    const fee1x     = fees.i1 != null ? fees.i1 : 0;
+    const fullPrice = basePrice * (1 + fee1x / 100);
+
+    const hasAnyFee = fees.pix != null || Object.keys(fees).some(k => k.startsWith('i'));
+    if (!hasAnyFee) { wrap.classList.add('hidden'); return; }
+
+    const rows = [];
+
+    // ── Pix / Dinheiro ──
+    if (fees.pix != null && fees.pix > 0) {
+      const discounted = fullPrice * (1 - fees.pix / 100);
+      rows.push(`
+        <div class="pt-row pt-highlight">
+          <div class="pt-label">
+            <span class="pt-badge pix">🟢 Pix / Dinheiro</span>
+            <span class="pt-discount">${fees.pix}% de desconto</span>
+          </div>
+          <div class="pt-price">
+            <span class="pt-total">${Calculator.fmt(discounted)}</span>
+            <span class="pt-each">à vista</span>
+          </div>
+        </div>`);
+    } else {
+      rows.push(`
+        <div class="pt-row">
+          <div class="pt-label">
+            <span class="pt-badge pix">🟢 Pix / Dinheiro</span>
+          </div>
+          <div class="pt-price">
+            <span class="pt-total">${Calculator.fmt(fullPrice)}</span>
+            <span class="pt-each">à vista</span>
+          </div>
+        </div>`);
+    }
+
+    // ── Cartão 1× ── (preço cheio já embute taxa 1x)
+    if (fees.i1 != null) {
+      const feeTag = fee1x > 0 ? `<span class="pt-fee-tag">+${fee1x}% taxa</span>` : '';
+      rows.push(`
+        <div class="pt-row">
+          <div class="pt-label">
+            <span class="pt-badge card">💳 1× débito / à vista</span>
+            ${feeTag}
+          </div>
+          <div class="pt-price">
+            <span class="pt-total">${Calculator.fmt(fullPrice)}</span>
+          </div>
+        </div>`);
+    }
+
+    // ── Cartão 2×–12× ── aplicam taxa sobre o preço cheio
+    for (let i = 2; i <= 12; i++) {
+      const feeKey = `i${i}`;
+      if (fees[feeKey] == null) continue;
+      const feePct = fees[feeKey];
+      const total  = fullPrice * (1 + feePct / 100);
+      const each   = total / i;
+      const feeTag = feePct > 0 ? `<span class="pt-fee-tag">+${feePct}% taxa</span>` : '';
+      rows.push(`
+        <div class="pt-row">
+          <div class="pt-label">
+            <span class="pt-badge card">💳 ${i}× parcelas de</span>
+            ${feeTag}
+          </div>
+          <div class="pt-price">
+            <span class="pt-each">${Calculator.fmt(each)}</span>
+            <span class="pt-total">${Calculator.fmt(total)}</span>
+          </div>
+        </div>`);
+    }
+
+    table.innerHTML = rows.join('');
+    wrap.classList.remove('hidden');
   },
 
   savePiece() {
@@ -1022,6 +1129,7 @@ const App = {
 
     // Settings — Business info
     document.getElementById('btn-save-biz').addEventListener('click', () => this.saveBusinessInfo());
+    document.getElementById('btn-save-fees').addEventListener('click', () => this.saveCardFees());
     document.getElementById('biz-logo-inp').addEventListener('change', e => {
       if (e.target.files && e.target.files[0]) this.handleLogoUpload(e.target.files[0]);
     });

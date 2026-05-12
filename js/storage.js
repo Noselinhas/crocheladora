@@ -29,5 +29,8 @@ const Storage = {
   getBusinessInfo()  { return this._get('cro_business') || { name: '', info: '', logo: '' }; },
   saveBusinessInfo(b){ this._set('cro_business', b); },
 
+  getCardFees()      { return this._get('cro_card_fees') || {}; },
+  saveCardFees(f)    { this._set('cro_card_fees', f); },
+
   clearAll()         { ['pieces','settings','yarns','timers'].forEach(k => localStorage.removeItem(`cro_${k}`)); }
 };
