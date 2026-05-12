@@ -292,6 +292,16 @@
           </div>
           <small class="hint">Percentual de lucro sobre o custo total</small>
         </div>
+
+        <div class="form-group">
+          <label for="inp-card-fee">💳 Taxa de cartão (1× / débito)</label>
+          <div class="input-wrap">
+            <input type="number" id="inp-card-fee" placeholder="0" min="0" max="100" step="0.1">
+            <span class="unit-tag">%</span>
+          </div>
+          <small class="hint">Taxa da maquininha já embutida no preço final cobrado no cartão</small>
+        </div>
+
         <div class="info-tip">
           <span class="tip-icon">💡</span>
           <p>Para artesanato, recomenda-se uma margem de <strong>30% a 100%</strong> sobre o custo total.</p>
@@ -458,14 +468,6 @@
         <!-- Installment fees grid -->
         <div class="fees-section-label">Taxas do Cartão por Parcelas</div>
         <div class="fees-grid" id="fees-grid">
-          <!-- 1x -->
-          <div class="fee-row">
-            <span class="fee-label">1× (débito/à vista)</span>
-            <div class="fee-inp-wrap">
-              <input type="number" class="fee-inp" id="fee-1" data-inst="1" placeholder="0" min="0" max="100" step="0.1">
-              <span class="fee-pct">%</span>
-            </div>
-          </div>
           <!-- 2x -->
           <div class="fee-row">
             <span class="fee-label">2× parcelas</span>

@@ -358,11 +358,11 @@ const App = {
       bizLogoPreview.innerHTML = `<img src="${biz.logo}" style="max-width:120px;max-height:80px;border-radius:8px;margin-top:8px;">`;
     }
 
-    // Load card fees
+    // Load card fees (2×–12× only; 1× fica na calculadora)
     const fees = Storage.getCardFees();
     const pixEl = document.getElementById('fee-pix');
     if (pixEl) pixEl.value = fees.pix != null ? fees.pix : '';
-    for (let i = 1; i <= 12; i++) {
+    for (let i = 2; i <= 12; i++) {
       const el = document.getElementById(`fee-${i}`);
       if (el) el.value = fees[`i${i}`] != null ? fees[`i${i}`] : '';
     }
@@ -372,7 +372,8 @@ const App = {
     const fees = {};
     const pixEl = document.getElementById('fee-pix');
     if (pixEl && pixEl.value !== '') fees.pix = parseFloat(pixEl.value);
-    for (let i = 1; i <= 12; i++) {
+    // Loop 2–12 (1× foi movido para a calculadora)
+    for (let i = 2; i <= 12; i++) {
       const el = document.getElementById(`fee-${i}`);
       if (el && el.value !== '') fees[`i${i}`] = parseFloat(el.value);
     }
@@ -415,6 +416,7 @@ const App = {
       profitMargin:      s.lastProfitMargin || '',
       monthlyFixed:      s.lastMonthlyFixed || '',
       piecesPerMonth:    s.lastPiecesPerMonth || '',
+      cardFee:           s.lastCardFee || '',
       packagingCost:     '',
       shippingCost:      '',
       otherCost:         '',
@@ -435,6 +437,7 @@ const App = {
     setVal('inp-pieces-month', this.currentCalc.piecesPerMonth);
     setVal('inp-fixed-cost',   this.currentCalc.fixedCostPerPiece);
     setVal('inp-profit',       this.currentCalc.profitMargin);
+    setVal('inp-card-fee',     this.currentCalc.cardFee);
     setVal('inp-packaging',    this.currentCalc.packagingCost);
     setVal('inp-shipping',     this.currentCalc.shippingCost);
     setVal('inp-other-cost',   this.currentCalc.otherCost);
@@ -741,6 +744,7 @@ const App = {
     this.collectMaterials();
     this.currentCalc.fixedCostPerPiece = parseFloat(document.getElementById('inp-fixed-cost')?.value) || 0;
     this.currentCalc.profitMargin      = parseFloat(document.getElementById('inp-profit')?.value)      || 0;
+    this.currentCalc.cardFee           = parseFloat(document.getElementById('inp-card-fee')?.value)    || 0;
     this.currentCalc.hoursSpent        = parseFloat(document.getElementById('inp-hours')?.value)       || 0;
     this.currentCalc.minutesSpent      = parseFloat(document.getElementById('inp-minutes')?.value)     || 0;
     this.currentCalc.hourlyRate        = parseFloat(document.getElementById('inp-hourly-rate')?.value) || 0;
@@ -753,6 +757,7 @@ const App = {
     s.lastProfitMargin   = this.currentCalc.profitMargin;
     s.lastMonthlyFixed   = this.currentCalc.monthlyFixed;
     s.lastPiecesPerMonth = this.currentCalc.piecesPerMonth;
+    s.lastCardFee        = this.currentCalc.cardFee;
     Storage.saveSettings(s);
 
     const result = Calculator.calculate(this.currentCalc);
@@ -785,11 +790,12 @@ const App = {
     if (!wrap || !table) return;
 
     const hasAnyFee = Object.keys(fees).length > 0;
-    if (!hasAnyFee) { wrap.classList.add('hidden'); return; }
+    const cardFee   = parseFloat(this.currentCalc?.cardFee) || 0;
+    // Mostra a tabela se houver taxas de parcela OU taxa de cartão no calc
+    if (!hasAnyFee && cardFee === 0) { wrap.classList.add('hidden'); return; }
 
-    // Preço cheio = basePrice + taxa 1× (já embutida no preço de tabela)
-    const fee1x     = (fees.i1 != null) ? fees.i1 : 0;
-    const fullPrice = basePrice * (1 + fee1x / 100);
+    // Preço cheio = base + taxa de cartão 1× (do passo 4 da calculadora)
+    const fullPrice = basePrice * (1 + cardFee / 100);
 
     // Monta lista de opções de pagamento
     const options = [];
@@ -802,16 +808,14 @@ const App = {
       tag: fees.pix > 0 ? `${fees.pix}% de desconto` : null, tagClass: 'pt-discount'
     });
 
-    // ── Cartão 1× ──
-    if (fees.i1 != null) {
-      options.push({
-        key: '1', label: '1× débito / à vista', badge: 'card',
-        price: fullPrice, each: null, installments: 1,
-        tag: fee1x > 0 ? `+${fee1x}% taxa` : null, tagClass: 'pt-fee-tag'
-      });
-    }
+    // ── Cartão 1× (usa cardFee do passo 4) ──
+    options.push({
+      key: '1', label: '1× débito / à vista', badge: 'card',
+      price: fullPrice, each: null, installments: 1,
+      tag: cardFee > 0 ? `+${cardFee}% taxa` : null, tagClass: 'pt-fee-tag'
+    });
 
-    // ── Cartão 2×–12× — taxa aplicada SOMENTE sobre basePrice (independente) ──
+    // ── Cartão 2×–12× — taxa somente da parcela (sobre basePrice) ──
     for (let i = 2; i <= 12; i++) {
       const feeKey = `i${i}`;
       if (fees[feeKey] == null) continue;
@@ -1119,7 +1123,7 @@ const App = {
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', () => this.autoCalcFixedCost());
     });
-    ['inp-fixed-cost','inp-profit'].forEach(id => {
+    ['inp-fixed-cost','inp-profit','inp-card-fee'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', () => this.updateLiveCalc());
     });
