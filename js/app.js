@@ -763,22 +763,22 @@ const App = {
 
   // ── Payment Table ───────────────────────────────────────
   renderPaymentTable(basePrice) {
-    const fees = Storage.getCardFees();
+    const fees  = Storage.getCardFees();
     const wrap  = document.getElementById('payment-table-wrap');
     const table = document.getElementById('payment-table');
     if (!wrap || !table) return;
 
-    // O "preço cheio" é o preço base + taxa do cartão 1×
-    // Assim o artesão já embute o custo da maquininha no preço de tabela.
-    const fee1x     = fees.i1 != null ? fees.i1 : 0;
-    const fullPrice = basePrice * (1 + fee1x / 100);
-
-    const hasAnyFee = fees.pix != null || Object.keys(fees).some(k => k.startsWith('i'));
+    // Se nenhuma taxa foi configurada ainda, esconde o bloco
+    const hasAnyFee = Object.keys(fees).length > 0;
     if (!hasAnyFee) { wrap.classList.add('hidden'); return; }
+
+    // "Preço cheio" = preço base + taxa do cartão 1×
+    const fee1x     = (fees.i1 != null) ? fees.i1 : 0;
+    const fullPrice = basePrice * (1 + fee1x / 100);
 
     const rows = [];
 
-    // ── Pix / Dinheiro ──
+    // ── Pix / Dinheiro — sempre aparece ──
     if (fees.pix != null && fees.pix > 0) {
       const discounted = fullPrice * (1 - fees.pix / 100);
       rows.push(`
@@ -793,6 +793,7 @@ const App = {
           </div>
         </div>`);
     } else {
+      // sem desconto configurado → mostra preço cheio no Pix
       rows.push(`
         <div class="pt-row">
           <div class="pt-label">
@@ -805,7 +806,7 @@ const App = {
         </div>`);
     }
 
-    // ── Cartão 1× ── (preço cheio já embute taxa 1x)
+    // ── Cartão 1× ──
     if (fees.i1 != null) {
       const feeTag = fee1x > 0 ? `<span class="pt-fee-tag">+${fee1x}% taxa</span>` : '';
       rows.push(`
@@ -820,7 +821,7 @@ const App = {
         </div>`);
     }
 
-    // ── Cartão 2×–12× ── aplicam taxa sobre o preço cheio
+    // ── Cartão 2×–12× ──
     for (let i = 2; i <= 12; i++) {
       const feeKey = `i${i}`;
       if (fees[feeKey] == null) continue;
@@ -844,6 +845,8 @@ const App = {
     table.innerHTML = rows.join('');
     wrap.classList.remove('hidden');
   },
+
+
 
   savePiece() {
     if (!this.currentCalc) return;
